@@ -1,12 +1,10 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component } from '@angular/core';
+import { Mp3PlayerComponent } from './mp3-player/mp3-player.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [Mp3PlayerComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App {
-  protected readonly title = signal('decal-mp3-player');
-}
+export class App {}

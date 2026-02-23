@@ -1,0 +1,192 @@
+:host {
+  display: block;
+  width: 100%;
+  --bg: #171a1f;
+  --text: #f1f3f5;
+  --muted: #c0c6cf;
+  --border: #30363f;
+  --button-bg: #252b34;
+  --button-border: #434b58;
+  --active: #8ab4ff;
+  --overlay-backdrop: rgba(0, 0, 0, 0.8);
+  --dialog-bg: #1f242c;
+}
+
+.player-shell {
+  max-width: 640px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  margin: 0 0 1rem;
+}
+
+.player-logo {
+  display: block;
+  max-width: 260px;
+  width: 100%;
+  height: auto;
+  margin: 0 0 1rem;
+}
+
+.now-playing {
+  margin-bottom: 0.75rem;
+}
+
+.label {
+  font-size: 0.8rem;
+  margin: 0;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.track-title {
+  font-size: 1.2rem;
+  margin: 0.25rem 0 0;
+}
+
+.track-artist {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+}
+
+audio {
+  width: 100%;
+}
+
+.controls {
+  display: flex;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.controls button,
+.playlist button {
+  cursor: pointer;
+  border: 1px solid var(--button-border);
+  border-radius: 8px;
+  background: var(--button-bg);
+  color: var(--text);
+  padding: 0.5rem 0.75rem;
+}
+
+.playlist {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.playlist li.active button {
+  border-color: var(--active);
+  color: var(--active);
+  font-weight: 600;
+}
+
+.playlist button {
+  width: 100%;
+  text-align: left;
+}
+
+.error {
+  color: #b30000;
+}
+
+.albums {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.album {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.album-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.album-cover {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.album-cover-button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.album-artist {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.image-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.image-overlay-dialog {
+  position: relative;
+  background: var(--dialog-bg);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 0.75rem 0.75rem 0.5rem;
+  max-width: min(90vw, 720px);
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.image-overlay-dialog img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.image-overlay-close {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  border: 1px solid var(--button-border);
+  border-radius: 8px;
+  background: var(--button-bg);
+  color: var(--text);
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+}
+
+.image-overlay-title {
+  margin: 0.6rem 0 0;
+  color: var(--text);
+  font-size: 0.95rem;
+}

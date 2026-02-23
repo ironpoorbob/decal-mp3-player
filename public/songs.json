@@ -1,0 +1,132 @@
+{
+  "baseUrl": "https://www.bobconlon.com/Decal/tracks/Decal/",
+  "playerLogo": "Decal-mp3-player.png",
+  "albums": [
+    {
+      "path": "Molotov%20Cocktails%20and%20Other%20Mixed%20Drinks/",
+      "title": "Molotov Cocktails and Other Mixed Drinks",
+      "artist": "Decal",
+      "image": "Decal-molotov-cover.jpg",
+      "songs": [
+        {
+          "id": "track-001",
+          "title": "Molotov Cocktails",
+          "url": "01 - Molotov Cocktails.mp3"
+        },
+        {
+          "id": "track-002",
+          "title": "Waltz",
+          "url": "02 - Waltz.mp3"
+        },
+        {
+          "id": "track-003",
+          "title": "Dumped On Your Ass",
+          "url": "03 - Dumped On Your Ass.mp3"
+        },
+        {
+          "id": "track-004",
+          "title": "So Long",
+          "url": "04 - So Long.mp3"
+        },
+        {
+          "id": "track-005",
+          "title": "Cherry Blossom",
+          "url": "05 - Cherry Blossom.mp3"
+        },
+        {
+          "id": "track-006",
+          "title": "Degenerate",
+          "url": "06 - Degenerate.mp3"
+        },
+        {
+          "id": "track-007",
+          "title": "Figure Me Out",
+          "url": "07 - Figure Me Out.mp3"
+        },
+        {
+          "id": "track-008",
+          "title": "Burn",
+          "url": "08 - Burn.mp3"
+        },
+        {
+          "id": "track-009",
+          "title": "Crabs",
+          "url": "09 - Crabs.mp3"
+        }
+      ]
+    },
+    {
+      "path": "All Your Favorite Left Overs/",
+      "title": "All Your Favorite Left Overs",
+      "artist": "Decal",
+      "image": "Decal-leftovers-cover.png",
+      "songs": [
+        {
+          "id": "track-001",
+          "title": "All Week Long",
+          "url": "01 All Week Long.mp3"
+        },
+        {
+          "id": "track-002",
+          "title": "(My Whole Life is) On Ice",
+          "url": "02 (My Whole Life is) On Ice.mp3"
+        },
+        {
+          "id": "track-003",
+          "title": "She Took It All From Me",
+          "url": "03 She Took It All From Me.mp3"
+        },
+        {
+          "id": "track-004",
+          "title": "Superball",
+          "url": "04 Superball.mp3"
+        },
+        {
+          "id": "track-005",
+          "title": "Game Of Pricks",
+          "url": "05 Game Of Pricks.mp3"
+        },
+        {
+          "id": "track-006",
+          "title": "Brush You Teeth",
+          "url": "06 Brush You Teeth.mp3"
+        },
+        {
+          "id": "track-007",
+          "title": "Not Waitin' For You",
+          "url": "07 Not Waitin' For You.mp3"
+        },
+        {
+          "id": "track-008",
+          "title": "Low Life",
+          "url": "08 Low Life.mp3"
+        },
+        {
+          "id": "track-009",
+          "title": "Deny 'Em",
+          "url": "09 Deny 'Em.mp3"
+        },
+        {
+          "id": "track-010",
+          "title": "B School Rock",
+          "url": "10 B School Rock.mp3"
+        },
+        {
+          "id": "track-011",
+          "title": "What Can You Do",
+          "url": "11 What Can You Do.mp3"
+        },
+        {
+          "id": "track-012",
+          "title": "Your Bricks Are Toast",
+          "url": "12 Your Bricks Are Toast.mp3"
+        },
+        {
+          "id": "track-013",
+          "title": "Freight Train",
+          "url": "13 Freight Train.mp3"
+        }
+      ]
+    }
+  ]
+}

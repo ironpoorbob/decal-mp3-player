@@ -30,6 +30,8 @@
           },
           "configurations": {
             "production": {
+              "baseHref": "/Decal-music/",
+              "deployUrl": "/Decal-music/",
               "budgets": [
                 {
                   "type": "initial",

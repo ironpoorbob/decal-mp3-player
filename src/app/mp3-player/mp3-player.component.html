@@ -1,0 +1,91 @@
+<section class="player-shell">
+  @if (playerLogo()) {
+    <img class="player-logo" [src]="playerLogo()" alt="MP3 player logo" />
+  } @else {
+    <h1>Decal MP3 Player</h1>
+  }
+
+  @if (loading()) {
+    <p>Loading songs...</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (totalSongs() === 0) {
+    <p>No songs found in songs.json.</p>
+  } @else {
+    <div class="now-playing">
+      <p class="label">Now Playing</p>
+      <p class="track-title">{{ currentSong()?.title }}</p>
+      <p class="track-artist">{{ currentSong()?.artist }} - {{ currentSong()?.albumTitle }}</p>
+    </div>
+
+    <audio
+      #audioPlayer
+      [src]="currentSong()?.url ?? ''"
+      controls
+      [autoplay]="hasUserStartedPlayback()"
+      (play)="onAudioPlay()"
+      (ended)="onTrackEnded()"
+    ></audio>
+
+    <div class="controls">
+      <button type="button" (click)="playPrevious()">Previous</button>
+      <button type="button" (click)="playNext()">Next</button>
+    </div>
+
+    <div class="albums">
+      @for (album of albums(); track album.key; let albumIndex = $index) {
+        <section class="album">
+          <header class="album-header">
+            @if (album.image) {
+              <button
+                type="button"
+                class="album-cover-button"
+                (click)="openImageOverlay(album.image, album.title)"
+                [attr.aria-label]="'Open cover for ' + album.title"
+              >
+                <img class="album-cover" [src]="album.image" [alt]="album.title + ' cover'" />
+              </button>
+            }
+            <div>
+              <h2>{{ album.title }}</h2>
+              <p class="album-artist">{{ album.artist }}</p>
+            </div>
+          </header>
+
+          <ul class="playlist">
+            @for (song of album.songs; track song.id; let songIndex = $index) {
+              <li [class.active]="albumIndex === currentAlbumIndex() && songIndex === currentSongIndex()">
+                <button type="button" (click)="playSong(albumIndex, songIndex)">
+                  {{ song.title }}
+                </button>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    </div>
+  }
+</section>
+
+@if (imageOverlay(); as overlay) {
+  <div class="image-overlay-backdrop" (click)="closeImageOverlay()">
+    <div
+      class="image-overlay-dialog"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="overlay.title + ' cover image'"
+      (click)="$event.stopPropagation()"
+    >
+      <button
+        type="button"
+        class="image-overlay-close"
+        aria-label="Close cover image"
+        (click)="closeImageOverlay()"
+      >
+        X
+      </button>
+      <img [src]="overlay.src" [alt]="overlay.title + ' full cover'" />
+      <p class="image-overlay-title">{{ overlay.title }}</p>
+    </div>
+  </div>
+}
