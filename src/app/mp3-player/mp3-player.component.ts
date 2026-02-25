@@ -1,5 +1,21 @@
-import { HttpClient } from '@angular/common/http';
-import { Component, ElementRef, HostListener, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, computed, HostListener, inject, signal } from '@angular/core';
+import { PlayerDataService } from '../services/player-data.service';
+
+interface Artist {
+  artistName: string;
+  artistImage?: string;
+  description?: string;
+  albums: Album[];
+}
+
+interface Album {
+  path: string;
+  title: string;
+  albumImage?: string;
+  albumNotes?: string;
+  image?: string;
+  songs: Song[];
+}
 
 interface Song {
   id: string;
@@ -7,33 +23,78 @@ interface Song {
   url: string;
 }
 
-interface Album {
-  path?: string;
-  title?: string;
-  artist?: string;
-  image?: string;
-  songs?: Song[];
+interface PlayerConfig {
+  baseUrl: string;
+  playerLogo: string;
+  artists: PlayerArtist[];
 }
 
-interface PlayerSong extends Song {
-  artist: string;
-  albumTitle: string;
-  albumImage?: string;
+interface PlayerArtist {
+  artistName?: string;
+  artistBaseUrl: string;
+  songsManifest: string;
 }
 
-interface PlayerAlbum {
-  key: string;
-  title: string;
-  artist: string;
-  image?: string;
-  songs: PlayerSong[];
+
+
+// this data is assembled from the player.json and artist songs.json
+interface PlayerDataModel {
+  playerBaseUrl: string;
+  playerLogo: string;
+  playerLogoUrl: string | null;
+  artists: PlayerArtistData[];
 }
 
-interface SongsManifest {
-  baseUrl?: string;
-  playerLogo?: string;
-  albums?: Album[];
+interface PlayerArtistData {
+  artistName?: string;
+  artistImage?: string;
+  description?: string;
+  albums: Album[];
+  artistBaseUrl: string;
+  songsManifest: string;
 }
+
+interface BandInfoOverlayData {
+  artistName: string;
+  artistImage?: string;
+  description?: string;
+}
+
+interface ArtistSongsManifest {
+  artistName?: string;
+  artistImage?: string;
+  description?: string;
+  artist?: {
+    artistName?: string;
+    artistImage?: string;
+    description?: string;
+  };
+  albums: Album[];
+}
+
+
+
+// interface PlayerSong extends Song {
+//   artistName: string;
+//   albumTitle: string;
+//   albumImage?: string;
+// }
+
+// interface PlayerAlbum {
+//   key: string;
+//   title: string;
+//   artist: string;
+//   image?: string;
+//   artistImage?: string;
+//   description?: string;
+//   songs: PlayerSong[];
+// }
+
+// interface SongsManifest {
+//   baseUrl?: string;
+//   playerLogo?: string;
+//   albums?: Album[];
+// }
 
 @Component({
   selector: 'app-mp3-player',
@@ -42,23 +103,43 @@ interface SongsManifest {
   styleUrl: './mp3-player.component.css'
 })
 export class Mp3PlayerComponent {
-  private readonly http = inject(HttpClient);
-  private readonly audioPlayer = viewChild<ElementRef<HTMLAudioElement>>('audioPlayer');
+  private readonly playerData = inject(PlayerDataService);
+  private pendingArtistLoads = 0;
 
-  readonly albums = signal<PlayerAlbum[]>([]);
+  mainPlayerData = signal<PlayerDataModel | null>(null);
   readonly currentAlbumIndex = signal(0);
   readonly currentSongIndex = signal(0);
   readonly loading = signal(true);
   readonly error = signal('');
-  readonly imageOverlay = signal<{ src: string; title: string } | null>(null);
-  readonly playerLogo = signal<string | null>(null);
   readonly hasUserStartedPlayback = signal(false);
-  readonly totalSongs = computed(() =>
-    this.albums().reduce((count, album) => count + album.songs.length, 0)
-  );
 
-  readonly currentSong = computed<PlayerSong | null>(() => {
-    const currentAlbum = this.albums()[this.currentAlbumIndex()];
+  readonly imageOverlay = signal<{ src: string; title: string; notes?: string } | null>(null);
+  readonly bandInfoOverlay = signal<BandInfoOverlayData | null>(null);
+  readonly totalSongs = computed(() => {
+    const data = this.mainPlayerData();
+    if (!data) {
+      return 0;
+    }
+
+    return data.artists.reduce((artistCount, artist) => {
+      const artistSongs = artist.albums.reduce(
+        (albumCount, album) => albumCount + album.songs.length,
+        0
+      );
+      return artistCount + artistSongs;
+    }, 0);
+  });
+
+  readonly allAlbums = computed(() => {
+    const data = this.mainPlayerData();
+    if (!data) {
+      return [] as Album[];
+    }
+    return data.artists.flatMap((artist) => artist.albums);
+  });
+
+  readonly currentSong = computed<Song | null>(() => {
+    const currentAlbum = this.allAlbums()[this.currentAlbumIndex()];
     if (!currentAlbum || currentAlbum.songs.length === 0) {
       return null;
     }
@@ -66,8 +147,30 @@ export class Mp3PlayerComponent {
     return currentAlbum.songs[this.currentSongIndex()] ?? null;
   });
 
+  readonly currentAlbumTitle = computed(() => {
+    const currentAlbum = this.allAlbums()[this.currentAlbumIndex()];
+    return currentAlbum?.title ?? '';
+  });
+
+  readonly currentArtistName = computed(() => {
+    const data = this.mainPlayerData();
+    if (!data) {
+      return '';
+    }
+    const albumIndex = this.currentAlbumIndex();
+    let running = 0;
+    for (const artist of data.artists) {
+      const next = running + artist.albums.length;
+      if (albumIndex >= running && albumIndex < next) {
+        return artist.artistName ?? 'Artist';
+      }
+      running = next;
+    }
+    return '';
+  });
+
   constructor() {
-    this.loadSongs();
+    this.loadPlayerData();
   }
 
   onTrackEnded(): void {
@@ -78,50 +181,23 @@ export class Mp3PlayerComponent {
     this.playNext();
   }
 
-  playSong(albumIndex: number, songIndex: number): void {
-    console.log("albumIndex: ", albumIndex, "songIndex: ", songIndex);
-    const album = this.albums()[albumIndex];
-    if (!album || songIndex < 0 || songIndex >= album.songs.length) {
-      return;
-    }
-
-    const selectedSong = album.songs[songIndex];
-    this.currentAlbumIndex.set(albumIndex);
-    this.currentSongIndex.set(songIndex);
-    this.playCurrentSong(selectedSong);
-  }
-
-  playPrevious(): void {
-    const albums = this.albums();
-    if (albums.length === 0 || this.totalSongs() === 0) {
-      return;
-    }
-
-    let albumIndex = this.currentAlbumIndex();
-    let songIndex = this.currentSongIndex();
-
-    if (songIndex > 0) {
-      songIndex -= 1;
-    } else {
-      albumIndex = (albumIndex - 1 + albums.length) % albums.length;
-      while (albums[albumIndex].songs.length === 0) {
-        albumIndex = (albumIndex - 1 + albums.length) % albums.length;
-      }
-      songIndex = albums[albumIndex].songs.length - 1;
-    }
-
-    this.currentAlbumIndex.set(albumIndex);
-    this.currentSongIndex.set(songIndex);
-  }
-
   playNext(): void {
-    const albums = this.albums();
-    if (albums.length === 0 || this.totalSongs() === 0) {
+    if (this.totalSongs() === 0) {
+      return;
+    }
+
+    const albums = this.allAlbums();
+    if (albums.length === 0) {
       return;
     }
 
     let albumIndex = this.currentAlbumIndex();
     let songIndex = this.currentSongIndex();
+
+    if (albumIndex < 0 || albumIndex >= albums.length) {
+      albumIndex = 0;
+      songIndex = 0;
+    }
 
     if (songIndex + 1 < albums[albumIndex].songs.length) {
       songIndex += 1;
@@ -137,12 +213,73 @@ export class Mp3PlayerComponent {
     this.currentSongIndex.set(songIndex);
   }
 
-  openImageOverlay(src: string, title: string): void {
-    this.imageOverlay.set({ src, title });
+  playPrevious(): void {
+    if (this.totalSongs() === 0) {
+      return;
+    }
+
+    const albums = this.allAlbums();
+    if (albums.length === 0) {
+      return;
+    }
+
+    let albumIndex = this.currentAlbumIndex();
+    let songIndex = this.currentSongIndex();
+
+    if (albumIndex < 0 || albumIndex >= albums.length) {
+      albumIndex = 0;
+      songIndex = 0;
+    }
+
+    if (songIndex > 0) {
+      songIndex -= 1;
+    } else {
+      albumIndex = (albumIndex - 1 + albums.length) % albums.length;
+      while (albums[albumIndex].songs.length === 0) {
+        albumIndex = (albumIndex - 1 + albums.length) % albums.length;
+      }
+      songIndex = albums[albumIndex].songs.length - 1;
+    }
+
+    this.currentAlbumIndex.set(albumIndex);
+    this.currentSongIndex.set(songIndex);
   }
 
-  closeImageOverlay(): void {
-    this.imageOverlay.set(null);
+  playSong(artistIndex: number, albumIndex: number, songIndex: number): void {
+    console.log('artistIndex:', artistIndex, 'albumIndex:', albumIndex, 'songIndex:', songIndex);
+    const data = this.mainPlayerData();
+    if (!data || artistIndex < 0 || artistIndex >= data.artists.length) {
+      return;
+    }
+
+    const artist = data.artists[artistIndex];
+    if (albumIndex < 0 || albumIndex >= artist.albums.length) {
+      return;
+    }
+
+    const album = artist.albums[albumIndex];
+    if (!album || songIndex < 0 || songIndex >= album.songs.length) {
+      return;
+    }
+
+    const globalAlbumIndex =
+      data.artists.slice(0, artistIndex).reduce((count, a) => count + a.albums.length, 0) + albumIndex;
+
+    this.currentAlbumIndex.set(globalAlbumIndex);
+    this.currentSongIndex.set(songIndex);
+  }
+
+  isSongActive(artistIndex: number, albumIndex: number, songIndex: number): boolean {
+    const data = this.mainPlayerData();
+    if (!data) {
+      return false;
+    }
+
+    const globalAlbumIndex =
+      data.artists.slice(0, artistIndex).reduce((count, artist) => count + artist.albums.length, 0) +
+      albumIndex;
+
+    return this.currentAlbumIndex() === globalAlbumIndex && this.currentSongIndex() === songIndex;
   }
 
   onAudioPlay(): void {
@@ -151,86 +288,138 @@ export class Mp3PlayerComponent {
     }
   }
 
+  // image overlay functions
+  openImageOverlay(src: string, title: string, notes?: string): void {
+    this.imageOverlay.set({ src, title, notes });
+  }
+
+  closeImageOverlay(): void {
+    this.imageOverlay.set(null);
+  }
+
+  openBandInfoOverlay(artist: PlayerArtistData): void {
+    this.bandInfoOverlay.set({
+      artistName: artist.artistName ?? 'Artist',
+      artistImage: artist.artistImage,
+      description: artist.description
+    });
+  }
+
+  closeBandInfoOverlay(): void {
+    this.bandInfoOverlay.set(null);
+  }
+
   @HostListener('document:keydown.escape')
   onEscapeKey(): void {
     if (this.imageOverlay()) {
       this.closeImageOverlay();
     }
+    if (this.bandInfoOverlay()) {
+      this.closeBandInfoOverlay();
+    }
   }
 
-  private loadSongs(): void {
-    this.http.get<SongsManifest>('songs.json').subscribe({
-      next: (data) => {
-        try {
-          if (!data?.albums || !Array.isArray(data.albums) || data.albums.length === 0) {
-            throw new Error('Invalid songs manifest');
-          }
+  private loadPlayerData(): void {
+    this.loading.set(true);
+    this.error.set('');
+    this.playerData.getJson<PlayerConfig>('player.json').subscribe({
+      next: (config) => {
+        console.log('Loaded player config:', config);
 
-          console.log('Loaded songs manifest:', data);
-          this.playerLogo.set(
-            data.playerLogo ? this.resolveUrl(data.baseUrl, undefined, data.playerLogo) : null
-          );
+        this.mainPlayerData.set({
+          playerBaseUrl: config.baseUrl,
+          playerLogo: config.playerLogo,
+          playerLogoUrl: config.playerLogo ? this.resolveUrl(config.baseUrl, undefined, config.playerLogo) : null,
+          artists: config.artists.map((artist) => ({
+            artistName: artist.artistName,
+            artistBaseUrl: artist.artistBaseUrl,
+            songsManifest: artist.songsManifest,
+            albums: []
+          }))
+        });
 
-          const resolvedAlbums = data.albums.map((album, albumIndex) => {
-            if (!album?.songs || !Array.isArray(album.songs)) {
-              return {
-                key: `${albumIndex + 1}`,
-                title: album?.title ?? `Album ${albumIndex + 1}`,
-                artist: album?.artist ?? 'Unknown Artist',
-                image: album?.image ? this.resolveUrl(data.baseUrl, undefined, album.image) : undefined,
-                songs: []
-              };
-            }
+        console.log('Player data model initialized:', this.mainPlayerData());
 
-            const title = album.title ?? `Album ${albumIndex + 1}`;
-            const artist = album.artist ?? 'Unknown Artist';
-            const image = album.image ? this.resolveUrl(data.baseUrl, undefined, album.image) : undefined;
+        // this.playerLogo.set(
+        //   config.playerLogo ? this.resolveUrl(config.baseUrl, undefined, config.playerLogo) : null
+        // );
 
-            const songs = album.songs.map((song, songIndex) => {
-              return {
-                ...song,
-                id: `${albumIndex + 1}-${song.id ?? songIndex + 1}`,
-                artist,
-                albumTitle: title,
-                albumImage: image,
-                url: this.resolveUrl(data.baseUrl, album.path, song.url)
-              };
-            });
-
-            return {
-              key: `${albumIndex + 1}-${title}`,
-              title,
-              artist,
-              image,
-              songs
-            };
-          });
-
-          this.albums.set(resolvedAlbums);
-          const firstAlbumIndex = resolvedAlbums.findIndex((album) => album.songs.length > 0);
-          if (firstAlbumIndex >= 0) {
-            this.currentAlbumIndex.set(firstAlbumIndex);
-            this.currentSongIndex.set(0);
-          }
-        } catch {
-          this.albums.set([]);
-          this.playerLogo.set(null);
-          this.error.set('songs.json has an invalid format.');
-        } finally {
-          console.log('Finally Resolved albums:', this.albums());
+        // Load artist data for each artist in the config
+        this.pendingArtistLoads = config.artists.length;
+        if (this.pendingArtistLoads === 0) {
           this.loading.set(false);
-          console.log('Loading state set to false::: ', this.loading());
+          return;
         }
+        config.artists.forEach((artist) => {
+          this.loadArtistData({
+            artistName: artist.artistName,
+            artistBaseUrl: artist.artistBaseUrl,
+            songsManifest: artist.songsManifest,
+            albums: []
+          });
+        });
       },
       error: () => {
-        this.albums.set([]);
-        this.playerLogo.set(null);
-        this.error.set('Could not load songs.json. Confirm the file exists in /public.');
+        console.log('Could not load player.json.');
+        this.error.set('Could not load player.json.');
         this.loading.set(false);
       }
     });
   }
 
+  private loadArtistData(artist: PlayerArtistData): void {
+    this.playerData.getJson<ArtistSongsManifest>(this.resolveUrl(artist.artistBaseUrl, undefined, artist.songsManifest)).subscribe({
+      next: (data) => {
+        console.log(`Loaded songs manifest for artist ${artist.artistName}:`, data);
+        const currentData = this.mainPlayerData();
+        if (currentData) {
+          const resolvedArtistName =
+            data.artistName ?? data.artist?.artistName ?? artist.artistName ?? 'Unknown Artist';
+          const resolvedArtistImage = data.artistImage ?? data.artist?.artistImage;
+          const resolvedDescription = data.description ?? data.artist?.description;
+
+          const resolvedAlbums = data.albums.map((album) => ({
+            ...album,
+            albumImage: (album.albumImage ?? album.image)
+              ? this.resolveUrl(artist.artistBaseUrl, undefined, album.albumImage ?? album.image ?? '')
+              : undefined,
+            songs: album.songs.map((song) => ({
+              ...song,
+              url: this.resolveUrl(artist.artistBaseUrl, album.path, song.url)
+            }))
+          }));
+
+          const updatedArtists = currentData.artists.map((a) => {
+            if (a.artistBaseUrl === artist.artistBaseUrl) {
+              return {
+                ...a,
+                artistName: resolvedArtistName,
+                artistImage: resolvedArtistImage
+                  ? this.resolveUrl(artist.artistBaseUrl, undefined, resolvedArtistImage)
+                  : a.artistImage,
+                description: resolvedDescription ?? a.description,
+                albums: resolvedAlbums
+              };
+            }
+            return a;
+          });
+          this.mainPlayerData.set({ ...currentData, artists: updatedArtists });
+          console.log('Updated player data model with artist albums:', this.mainPlayerData());
+          console.log('total songs after loading artist data:', this.totalSongs());
+        }
+      },
+      error: () => {
+        console.error(`Failed to load songs manifest for artist ${artist.artistName} from URL: ${this.resolveUrl(artist.artistBaseUrl, undefined, artist.songsManifest)}`);
+      },
+      complete: () => {
+        this.pendingArtistLoads -= 1;
+        if (this.pendingArtistLoads <= 0) {
+          this.loading.set(false);
+        }
+      }
+    });
+  }
+  
   private resolveUrl(baseUrl: string | undefined, path: string | undefined, assetUrl: string): string {
     if (this.isAbsoluteUrl(assetUrl) || assetUrl.startsWith('/')) {
       return assetUrl;
@@ -264,21 +453,4 @@ export class Mp3PlayerComponent {
     return hasLeadingSlash ? `/${joined}` : joined;
   }
 
-  private playCurrentSong(song?: PlayerSong): void {
-    const audio = this.audioPlayer()?.nativeElement;
-    if (!audio) {
-      return;
-    }
-
-    const selectedSong = song ?? this.currentSong();
-    if (!selectedSong) {
-      return;
-    }
-
-    audio.src = selectedSong.url;
-    audio.load();
-    audio.play().catch((error) => {
-      console.log('Audio play blocked or failed:', error);
-    });
-  }
 }

@@ -1,0 +1,10 @@
+{
+  "baseUrl": "https://www.bobconlon.com/Decal-music",
+  "playerLogo": "Decal-mp3-player.png",
+  "artists": [
+    {
+      "artistBaseUrl": "https://www.bobconlon.com/Decal/tracks/Decal/",
+      "songsManifest": "songs.json"
+    }
+  ]
+}

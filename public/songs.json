@@ -1,12 +1,13 @@
 {
-  "baseUrl": "https://www.bobconlon.com/Decal/tracks/Decal/",
-  "playerLogo": "Decal-mp3-player.png",
+  "artistName": "Decal",
+  "artistImage": "decal-profile.jpg",
+  "description": "Decal is a San Francisco four-piece formed in the mid-’90s, pumping out hooky, guitar-driven songs with punch, heart, and just enough ragged edge to keep things honest. Built around driving rhythms, catchy lyrics and big melodies that stick to the roof of your mouth like peanut butter. The kind of songs that have you walking around singing them the next day. Decal blends melody and loud, biting guitars with a loose, heartfelt spirit that comes through strongest onstage—fun, energetic, a little sloppy in all the right ways, and always real.",
   "albums": [
     {
       "path": "Molotov%20Cocktails%20and%20Other%20Mixed%20Drinks/",
       "title": "Molotov Cocktails and Other Mixed Drinks",
-      "artist": "Decal",
-      "image": "Decal-molotov-cover.jpg",
+      "albumNotes": "'Molotov Cocktails and Other Mixed Drinks' is Decal's debut album. The album features a raw and energetic sound, with tracks that explore themes of break ups, beers and the mysteries of life. It received critical acclaim for its catchy melodies and heartfelt lyrics, establishing Decal as a notable presence in the SF music scene. It also came with a really neato cd-rom game that featured the band with interviews, live videos and a board game that was a blast. Check it out at https://www.bobconlon.com/Decal",
+      "albumImage": "Decal-molotov-cover.jpg",
       "songs": [
         {
           "id": "track-001",
@@ -58,6 +59,7 @@
     {
       "path": "All Your Favorite Left Overs/",
       "title": "All Your Favorite Left Overs",
+      "albumNotes": "All Your Favorite Leftovers is Decal’s second album, and it captures a band growing musically more adventurous without losing the hook-heavy punch. The songs still carry Decal’s pop-punk DNA, but there’s more rock and roll in the mix and a stronger sense of musical range, with arrangements that feel more layered and confident. Lyrically, the album digs into themes of bad relationships, heartbreak, beer and good dental hygiene all while examinining the general messiness of human connection. Though it was never officially released to the public, it stands as a strong snapshot of the band’s evolution, featuring a loving cover of Guided By Voices’ “Game of Pricks” and closing with guitarist Chris Carroll’s rendition of Elizabeth Cotten’s “Freight Train.”",
       "artist": "Decal",
       "image": "Decal-leftovers-cover.png",
       "songs": [
@@ -88,7 +90,7 @@
         },
         {
           "id": "track-006",
-          "title": "Brush You Teeth",
+          "title": "Brush Your Teeth",
           "url": "06 Brush You Teeth.mp3"
         },
         {
