@@ -35,8 +35,6 @@ interface PlayerArtist {
   songsManifest: string;
 }
 
-
-
 // this data is assembled from the player.json and artist songs.json
 interface PlayerDataModel {
   playerBaseUrl: string;
@@ -71,30 +69,6 @@ interface ArtistSongsManifest {
   };
   albums: Album[];
 }
-
-
-
-// interface PlayerSong extends Song {
-//   artistName: string;
-//   albumTitle: string;
-//   albumImage?: string;
-// }
-
-// interface PlayerAlbum {
-//   key: string;
-//   title: string;
-//   artist: string;
-//   image?: string;
-//   artistImage?: string;
-//   description?: string;
-//   songs: PlayerSong[];
-// }
-
-// interface SongsManifest {
-//   baseUrl?: string;
-//   playerLogo?: string;
-//   albums?: Album[];
-// }
 
 @Component({
   selector: 'app-mp3-player',
@@ -246,7 +220,6 @@ export class Mp3PlayerComponent {
   }
 
   playSong(artistIndex: number, albumIndex: number, songIndex: number): void {
-    console.log('artistIndex:', artistIndex, 'albumIndex:', albumIndex, 'songIndex:', songIndex);
     const data = this.mainPlayerData();
     if (!data || artistIndex < 0 || artistIndex >= data.artists.length) {
       return;
@@ -324,7 +297,6 @@ export class Mp3PlayerComponent {
     this.error.set('');
     this.playerData.getJson<PlayerConfig>('player.json').subscribe({
       next: (config) => {
-        console.log('Loaded player config:', config);
 
         this.mainPlayerData.set({
           playerBaseUrl: config.baseUrl,
@@ -337,12 +309,6 @@ export class Mp3PlayerComponent {
             albums: []
           }))
         });
-
-        console.log('Player data model initialized:', this.mainPlayerData());
-
-        // this.playerLogo.set(
-        //   config.playerLogo ? this.resolveUrl(config.baseUrl, undefined, config.playerLogo) : null
-        // );
 
         // Load artist data for each artist in the config
         this.pendingArtistLoads = config.artists.length;
@@ -370,7 +336,6 @@ export class Mp3PlayerComponent {
   private loadArtistData(artist: PlayerArtistData): void {
     this.playerData.getJson<ArtistSongsManifest>(this.resolveUrl(artist.artistBaseUrl, undefined, artist.songsManifest)).subscribe({
       next: (data) => {
-        console.log(`Loaded songs manifest for artist ${artist.artistName}:`, data);
         const currentData = this.mainPlayerData();
         if (currentData) {
           const resolvedArtistName =
@@ -404,8 +369,6 @@ export class Mp3PlayerComponent {
             return a;
           });
           this.mainPlayerData.set({ ...currentData, artists: updatedArtists });
-          console.log('Updated player data model with artist albums:', this.mainPlayerData());
-          console.log('total songs after loading artist data:', this.totalSongs());
         }
       },
       error: () => {
