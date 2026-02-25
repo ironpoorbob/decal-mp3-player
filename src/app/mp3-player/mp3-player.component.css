@@ -21,6 +21,10 @@
   background: var(--bg);
   color: var(--text);
   font-family: Arial, sans-serif;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 h1 {
@@ -36,6 +40,16 @@ h1 {
 }
 
 .now-playing {
+  margin-bottom: 0.75rem;
+}
+
+.player-top {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg);
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
   margin-bottom: 0.75rem;
 }
 
@@ -86,8 +100,9 @@ audio {
 }
 
 .playlist li.active button {
-  border-color: var(--active);
-  color: var(--active);
+  border-color: #39ff14;
+  color: #39ff14;
+  box-shadow: 0 0 0 1px rgba(57, 255, 20, 0.25), 0 0 12px rgba(57, 255, 20, 0.45);
   font-weight: 600;
 }
 
@@ -106,6 +121,11 @@ audio {
   gap: 1rem;
 }
 
+.albums-scroll {
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
 .album {
   border-top: 1px solid var(--border);
   padding-top: 1rem;
@@ -116,6 +136,10 @@ audio {
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
+}
+
+.album-meta {
+  min-width: 0;
 }
 
 .album-cover {
@@ -131,6 +155,16 @@ audio {
   background: transparent;
   padding: 0;
   cursor: pointer;
+}
+
+.band-info-button {
+  margin-left: auto;
+  border: 1px solid var(--button-border);
+  border-radius: 8px;
+  background: var(--button-bg);
+  color: var(--text);
+  cursor: pointer;
+  padding: 0.35rem 0.7rem;
 }
 
 h2 {
@@ -189,4 +223,19 @@ h2 {
   margin: 0.6rem 0 0;
   color: var(--text);
   font-size: 0.95rem;
+}
+
+.album-notes {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.band-info-dialog h3 {
+  margin: 0.75rem 0 0.5rem;
+}
+
+.band-description {
+  margin: 0;
+  color: var(--muted);
 }

@@ -1,69 +1,82 @@
 <section class="player-shell">
-  @if (playerLogo()) {
-    <img class="player-logo" [src]="playerLogo()" alt="MP3 player logo" />
-  } @else {
-    <h1>Decal MP3 Player</h1>
-  }
+  @if (mainPlayerData(); as data) {
+    @if (data.playerLogoUrl) {
+      <img class="player-logo" [src]="data.playerLogoUrl" alt="MP3 player logo" />
+    } @else {
+      <h1>Decal MP3 Player</h1>
+    }
 
-  @if (loading()) {
+    @if (loading()) {
     <p>Loading songs...</p>
-  } @else if (error()) {
-    <p class="error">{{ error() }}</p>
-  } @else if (totalSongs() === 0) {
-    <p>No songs found in songs.json.</p>
-  } @else {
-    <div class="now-playing">
-      <p class="label">Now Playing</p>
-      <p class="track-title">{{ currentSong()?.title }}</p>
-      <p class="track-artist">{{ currentSong()?.artist }} - {{ currentSong()?.albumTitle }}</p>
-    </div>
+    } @else if (error()) {
+      <p class="error">{{ error() }}</p>
+    } @else if (totalSongs() === 0) {
+      <p>No songs found in songs.json.</p>
+    } @else {
+      <div class="player-top">
+        <div class="now-playing">
+          <p class="label">Now Playing</p>
+          <p class="track-title">{{ currentSong()?.title }}</p>
+          <p class="track-artist">{{ currentArtistName() }} - {{ currentAlbumTitle() }}</p>
+        </div>
 
-    <audio
-      #audioPlayer
-      [src]="currentSong()?.url ?? ''"
-      controls
-      [autoplay]="hasUserStartedPlayback()"
-      (play)="onAudioPlay()"
-      (ended)="onTrackEnded()"
-    ></audio>
+        <audio
+          #audioPlayer
+          [src]="currentSong()?.url ?? ''"
+          controls
+          [autoplay]="hasUserStartedPlayback()"
+          (play)="onAudioPlay()"
+          (ended)="onTrackEnded()"
+        ></audio>
 
-    <div class="controls">
-      <button type="button" (click)="playPrevious()">Previous</button>
-      <button type="button" (click)="playNext()">Next</button>
-    </div>
+        <div class="controls">
+          <button type="button" (click)="playPrevious()">Previous</button>
+          <button type="button" (click)="playNext()">Next</button>
+        </div>
+      </div>
 
-    <div class="albums">
-      @for (album of albums(); track album.key; let albumIndex = $index) {
-        <section class="album">
-          <header class="album-header">
-            @if (album.image) {
-              <button
-                type="button"
-                class="album-cover-button"
-                (click)="openImageOverlay(album.image, album.title)"
-                [attr.aria-label]="'Open cover for ' + album.title"
-              >
-                <img class="album-cover" [src]="album.image" [alt]="album.title + ' cover'" />
-              </button>
-            }
-            <div>
-              <h2>{{ album.title }}</h2>
-              <p class="album-artist">{{ album.artist }}</p>
-            </div>
-          </header>
-
-          <ul class="playlist">
-            @for (song of album.songs; track song.id; let songIndex = $index) {
-              <li [class.active]="albumIndex === currentAlbumIndex() && songIndex === currentSongIndex()">
-                <button type="button" (click)="playSong(albumIndex, songIndex)">
-                  {{ song.title }}
+      <div class="albums-scroll">
+        <div class="albums">
+        @for (artist of data.artists; track artist.artistBaseUrl; let artistIndex = $index) {
+          @for (album of artist.albums; track album.title; let albumIndex = $index) {
+            <section class="album">
+              <header class="album-header">
+                @if (album.albumImage) {
+                  <button
+                    type="button"
+                    class="album-cover-button"
+                    (click)="openImageOverlay(album.albumImage, album.title, album.albumNotes)"
+                    [attr.aria-label]="'Open cover for ' + album.title"
+                  >
+                    <img class="album-cover" [src]="album.albumImage" [alt]="album.title + ' cover'" />
+                  </button>
+                }
+                <div class="album-meta">
+                  <h2>{{ album.title }}</h2>
+                  <p class="album-artist">{{ artist.artistName || 'Artist' }}</p>
+                </div>
+                <button type="button" class="band-info-button" (click)="openBandInfoOverlay(artist)">
+                  Band Info
                 </button>
-              </li>
-            }
-          </ul>
-        </section>
-      }
-    </div>
+              </header>
+
+              <ul class="playlist">
+                @for (song of album.songs; track song.id; let songIndex = $index) {
+                  <li [class.active]="isSongActive(artistIndex, albumIndex, songIndex)">
+                    <button type="button" (click)="playSong(artistIndex, albumIndex, songIndex)">
+                      {{ song.title }}
+                    </button>
+                  </li>
+                }
+              </ul>
+            </section>
+          }
+        }
+        </div>
+      </div>
+    }
+  } @else {
+    <p>Loading player data...</p>
   }
 </section>
 
@@ -86,6 +99,35 @@
       </button>
       <img [src]="overlay.src" [alt]="overlay.title + ' full cover'" />
       <p class="image-overlay-title">{{ overlay.title }}</p>
+      @if (overlay.notes) {
+        <p class="album-notes">{{ overlay.notes }}</p>
+      }
+    </div>
+  </div>
+}
+
+@if (bandInfoOverlay(); as info) {
+  <div class="image-overlay-backdrop" (click)="closeBandInfoOverlay()">
+    <div
+      class="image-overlay-dialog band-info-dialog"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="info.artistName + ' information'"
+      (click)="$event.stopPropagation()"
+    >
+      <button
+        type="button"
+        class="image-overlay-close"
+        aria-label="Close band info"
+        (click)="closeBandInfoOverlay()"
+      >
+        X
+      </button>
+      @if (info.artistImage) {
+        <img [src]="info.artistImage" [alt]="info.artistName + ' photo'" />
+      }
+      <h3>{{ info.artistName }}</h3>
+      <p class="band-description">{{ info.description || 'No band description available.' }}</p>
     </div>
   </div>
 }
