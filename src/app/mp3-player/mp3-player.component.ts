@@ -32,6 +32,7 @@ interface PlayerConfig {
 interface PlayerArtist {
   artistName?: string;
   artistBaseUrl: string;
+  songsManifestBaseUrl?: string;
   songsManifest: string;
 }
 
@@ -49,6 +50,7 @@ interface PlayerArtistData {
   description?: string;
   albums: Album[];
   artistBaseUrl: string;
+  songsManifestBaseUrl?: string;
   songsManifest: string;
 }
 
@@ -305,6 +307,7 @@ export class Mp3PlayerComponent {
           artists: config.artists.map((artist) => ({
             artistName: artist.artistName,
             artistBaseUrl: artist.artistBaseUrl,
+            songsManifestBaseUrl: artist.songsManifestBaseUrl,
             songsManifest: artist.songsManifest,
             albums: []
           }))
@@ -320,6 +323,7 @@ export class Mp3PlayerComponent {
           this.loadArtistData({
             artistName: artist.artistName,
             artistBaseUrl: artist.artistBaseUrl,
+            songsManifestBaseUrl: artist.songsManifestBaseUrl,
             songsManifest: artist.songsManifest,
             albums: []
           });
@@ -334,7 +338,9 @@ export class Mp3PlayerComponent {
   }
 
   private loadArtistData(artist: PlayerArtistData): void {
-    this.playerData.getJson<ArtistSongsManifest>(this.resolveUrl(artist.artistBaseUrl, undefined, artist.songsManifest)).subscribe({
+    const manifestUrl = this.resolveUrl(artist.songsManifestBaseUrl, undefined, artist.songsManifest);
+
+    this.playerData.getJson<ArtistSongsManifest>(manifestUrl).subscribe({
       next: (data) => {
         const currentData = this.mainPlayerData();
         if (currentData) {
@@ -372,7 +378,7 @@ export class Mp3PlayerComponent {
         }
       },
       error: () => {
-        console.error(`Failed to load songs manifest for artist ${artist.artistName} from URL: ${this.resolveUrl(artist.artistBaseUrl, undefined, artist.songsManifest)}`);
+        console.error(`Failed to load songs manifest for artist ${artist.artistName} from URL: ${manifestUrl}`);
       },
       complete: () => {
         this.pendingArtistLoads -= 1;
