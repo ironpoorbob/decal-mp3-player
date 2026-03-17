@@ -21,7 +21,7 @@
   background: var(--bg);
   color: var(--text);
   font-family: Arial, sans-serif;
-  max-height: 85vh;
+  max-height: calc(100dvh - 6rem);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -131,6 +131,11 @@ audio {
   padding-top: 1rem;
 }
 
+.album:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
 .album-header {
   display: flex;
   align-items: center;
@@ -238,4 +243,22 @@ h2 {
 .band-description {
   margin: 0;
   color: var(--muted);
+}
+
+@media (max-width: 640px) {
+  .player-shell {
+    margin: 0 auto 1rem;
+    padding: 8px 1rem 1rem;
+    max-height: calc(100dvh - 40px);
+  }
+
+  .player-shell > div {
+    padding-top: 0;
+    margin-top: 0;
+  }
+
+  .player-logo {
+    max-width: 140px;
+    margin-bottom: 0.75rem;
+  }
 }
