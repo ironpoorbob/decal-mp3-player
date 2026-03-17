@@ -7,3 +7,9 @@
 main {
   padding: 1rem;
 }
+
+@media (max-width: 640px) {
+  main {
+    padding-top: 8px;
+  }
+}
